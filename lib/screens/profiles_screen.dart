@@ -9,21 +9,11 @@ import 'package:flutter/material.dart';
 class FadeRoute extends PageRouteBuilder {
   final Widget page;
   FadeRoute({required this.page})
-    : super(
-        pageBuilder:
-            (
-              BuildContext context,
-              Animation<double> animation,
-              Animation<double> secondaryAnimation,
-            ) => page,
-        transitionsBuilder:
-            (
-              BuildContext context,
-              Animation<double> animation,
-              Animation<double> secondaryAnimation,
-              Widget child,
-            ) => FadeTransition(opacity: animation, child: child),
-      );
+      : super(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(opacity: animation, child: child),
+  );
 }
 
 class ProfilesScreen extends StatefulWidget {
@@ -47,7 +37,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   }
 
   Future<void> _loadDocuments() async {
-    if (_isLoading) return; // Prevent multiple simultaneous loads
+    if (_isLoading) return;
 
     setState(() {
       _isLoading = true;
@@ -76,9 +66,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
 
   void _optimisticallyUpdateDocument(Document updatedDocument) {
     setState(() {
-      final index = _documents.indexWhere(
-        (doc) => doc.id == updatedDocument.id,
-      );
+      final index = _documents.indexWhere((doc) => doc.id == updatedDocument.id);
       if (index != -1) {
         _documents[index] = updatedDocument;
       }
@@ -112,7 +100,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
 
     if (shouldLogout == true && mounted) {
       try {
-        await _apiService.logout();  // Call API
+        await _apiService.logout();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +114,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (_, __, ___) => LoginScreen(),
+            pageBuilder: (_, __, ___) => const LoginScreen(),
             transitionsBuilder: (_, animation, __, child) {
               return SlideTransition(
                 position: Tween<Offset>(
@@ -140,7 +128,7 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
         );
       }
     }
-
+  }
 
   Widget _buildLoadingList() {
     return ListView.builder(
@@ -191,32 +179,24 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
               MaterialPageRoute(
                 builder: (context) => DetailsScreen(
                   document: document,
-                  onCreate: (_, __, ___) {}, // Not used in edit mode
+                  onCreate: (_, __, ___) {},
                   onUpdate: (updatedDocument) async {
-                    // Optimistically update the document
                     _optimisticallyUpdateDocument(updatedDocument);
-                    
                     try {
-                      // Update the document on the server
                       await _apiService.updateDocument(updatedDocument);
-                      // Refresh the list to confirm the changes
                       _loadDocuments();
                     } catch (e) {
-                      // Revert the optimistic update if the server update failed
                       _loadDocuments();
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              'Failed to update document: ${e.toString()}',
-                            ),
+                            content: Text('Failed to update document: ${e.toString()}'),
                           ),
                         );
                       }
                     }
                   },
                   onDelete: (documentId) {
-                    // Optimistically remove the document
                     setState(() {
                       _documents.removeWhere((doc) => doc.id == documentId);
                     });
@@ -231,14 +211,13 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      child:
-          _documents.isEmpty && _isFirstLoad
-              ? _buildLoadingList()
-              : _documents.isEmpty
-              ? const Center(child: Text('No documents found'))
-              : kIsWeb
-              ? listView
-              : RefreshIndicator(onRefresh: _loadDocuments, child: listView),
+      child: _documents.isEmpty && _isFirstLoad
+          ? _buildLoadingList()
+          : _documents.isEmpty
+          ? const Center(child: Text('No documents found'))
+          : kIsWeb
+          ? listView
+          : RefreshIndicator(onRefresh: _loadDocuments, child: listView),
     );
   }
 
@@ -280,73 +259,58 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder:
-                  (context) => DetailsScreen(
-                    onCreate: (firstName, lastName, notes) async {
-                      // Create a temporary document with a placeholder ID
-                      final tempDocument = Document(
-                        id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
-                        firstName: firstName,
-                        lastName: lastName,
-                        notes: notes,
+              builder: (context) => DetailsScreen(
+                onCreate: (firstName, lastName, notes) async {
+                  final tempDocument = Document(
+                    id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+                    firstName: firstName,
+                    lastName: lastName,
+                    notes: notes,
+                  );
+
+                  _optimisticallyAddDocument(tempDocument);
+
+                  try {
+                    await _apiService.createDocument(firstName, lastName, notes);
+                    _loadDocuments();
+                  } catch (e) {
+                    setState(() {
+                      _documents.removeWhere((doc) => doc.id == tempDocument.id);
+                    });
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to create document: ${e.toString()}'),
+                        ),
                       );
-
-                      // Optimistically add the new document
-                      _optimisticallyAddDocument(tempDocument);
-
-                      try {
-                        // Create the document on the server
-                        await _apiService.createDocument(
-                          firstName,
-                          lastName,
-                          notes,
-                        );
-                        // Refresh the list to get the real document with proper ID
-                        _loadDocuments();
-                      } catch (e) {
-                        // Remove the temporary document if creation failed
-                        setState(() {
-                          _documents.removeWhere(
-                            (doc) => doc.id == tempDocument.id,
-                          );
-                        });
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Failed to create document: ${e.toString()}',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
+                    }
+                  }
+                },
+              ),
             ),
           );
         },
         child: const Icon(Icons.add),
       ),
-      body:
-          _error != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error: $_error',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadDocuments,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              )
-              : _buildDocumentList(),
+      body: _error != null
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Error: $_error',
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadDocuments,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      )
+          : _buildDocumentList(),
     );
   }
 }

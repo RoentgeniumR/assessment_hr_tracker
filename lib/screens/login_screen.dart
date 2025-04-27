@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _hasUsernameInteracted = false;
   bool _hasPasswordInteracted = false;
   bool _isLoading = false;
+  bool _obscurePassword = true; // <-- NEW for step 3
 
   @override
   void initState() {
@@ -101,12 +102,11 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(content: Text('Login failed: ${e.toString()}')),
         );
         setState(() {
-          _isLoading = false;  // <-- ADD THIS INSIDE catch block
+          _isLoading = false;
         });
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -126,19 +126,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: 'Username',
                     border: const OutlineInputBorder(),
                     errorText: _hasUsernameInteracted ? _usernameError : null,
-                    suffixIcon:
-                        _hasUsernameInteracted &&
-                                _usernameController.text.isNotEmpty
-                            ? Icon(
-                              _usernameError == null
-                                  ? Icons.check_circle
-                                  : Icons.error,
-                              color:
-                                  _usernameError == null
-                                      ? Colors.green
-                                      : Colors.red,
-                            )
-                            : null,
+                    suffixIcon: _hasUsernameInteracted &&
+                        _usernameController.text.isNotEmpty
+                        ? Icon(
+                      _usernameError == null
+                          ? Icons.check_circle
+                          : Icons.error,
+                      color: _usernameError == null
+                          ? Colors.green
+                          : Colors.red,
+                    )
+                        : null,
                   ),
                   keyboardType: TextInputType.emailAddress,
                   enabled: !_isLoading,
@@ -157,21 +155,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
                     errorText: _hasPasswordInteracted ? _passwordError : null,
-                    suffixIcon:
-                        _hasPasswordInteracted &&
-                                _passwordController.text.isNotEmpty
-                            ? Icon(
-                              _passwordError == null
-                                  ? Icons.check_circle
-                                  : Icons.error,
-                              color:
-                                  _passwordError == null
-                                      ? Colors.green
-                                      : Colors.red,
-                            )
-                            : null,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePassword, // <-- Use the flag
                   enabled: !_isLoading,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -197,20 +194,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         horizontal: 32,
                         vertical: 16,
                       ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
                     ),
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                            : const Text('Login'),
+                    child: _isLoading
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.white,
+                        ),
+                      ),
+                    )
+                        : const Text('Login'),
                   ),
                 ),
               ],

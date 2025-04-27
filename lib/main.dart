@@ -7,13 +7,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final authService = AuthService();
   final token = await authService.getToken();
-  
+
   runApp(MyApp(initialRoute: token != null ? '/profiles' : '/login'));
 }
 
 class MyApp extends StatelessWidget {
   final String initialRoute;
-  
+
   const MyApp({super.key, required this.initialRoute});
 
   @override
@@ -22,7 +22,9 @@ class MyApp extends StatelessWidget {
       title: 'Users Management',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Color(0xFF6B4EFF), // ✨ Changed to purple
+        ),
         useMaterial3: true,
       ),
       initialRoute: initialRoute,

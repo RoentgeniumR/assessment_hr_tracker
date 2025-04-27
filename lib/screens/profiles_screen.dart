@@ -256,6 +256,11 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+        child: const Icon(Icons.add, color: Colors.black),
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -290,7 +295,6 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
             ),
           );
         },
-        child: const Icon(Icons.add),
       ),
       body: _error != null
           ? Center(

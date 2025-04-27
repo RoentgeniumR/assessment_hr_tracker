@@ -179,6 +179,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                    ),
                     ),
                     child: const Text('Save'),
                   ),

@@ -45,12 +45,18 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  bool isValidEmail(String email) {
+    return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
+  }
+
   void _validateUsername() {
     if (!_hasUsernameInteracted) return;
 
     final username = _usernameController.text;
     if (username.isEmpty) {
       setState(() => _usernameError = 'Please enter your username');
+    } else if (!isValidEmail(username)) {
+      setState(() => _usernameError = 'Username must be a valid email address');
     } else {
       setState(() => _usernameError = null);
     }
@@ -94,9 +100,13 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: ${e.toString()}')),
         );
+        setState(() {
+          _isLoading = false;  // <-- ADD THIS INSIDE catch block
+        });
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +187,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
+                    onPressed: (_isLoading || _usernameError != null || _passwordError != null)
+                        ? null
+                        : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,

@@ -126,7 +126,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ),
         ],
       ),
-      body: SafeArea(
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Form(
@@ -183,7 +184,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   ),
                 ),
                 // Add extra padding at the bottom to ensure the save button is always accessible
-                const SizedBox(height: 100),
               ],
             ),
           ),

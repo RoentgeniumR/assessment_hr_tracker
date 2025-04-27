@@ -214,6 +214,28 @@ class ApiService {
     }
   }
 
+  Future<void> logout() async {
+    try {
+      final headers = await _getHeaders();
+
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/api/logout'),
+        headers: headers,
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to logout: ${response.statusCode}');
+      }
+
+      // Optionally clear token and companyId from local storage
+      await _authService.saveToken('');
+      await _authService.saveCompanyId('');
+
+    } catch (e) {
+      throw Exception('Failed to logout: $e');
+    }
+  }
+
   Future<Map<String, String>> _getHeaders() async {
     final token = await _authService.getToken();
     if (token == null) {

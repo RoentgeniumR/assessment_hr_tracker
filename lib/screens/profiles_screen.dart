@@ -1,5 +1,6 @@
 import 'package:assessment/models/document.dart';
 import 'package:assessment/screens/details_screen.dart';
+import 'package:assessment/screens/login_screen.dart';
 import 'package:assessment/services/api_service.dart';
 import 'package:assessment/widgets/shimmer.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -93,29 +94,53 @@ class _ProfilesScreenState extends State<ProfilesScreen> {
   Future<void> _logout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Logout'),
-            content: const Text('Are you sure you want to logout?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Logout'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
 
     if (shouldLogout == true && mounted) {
+      try {
+        await _apiService.logout();  // Call API
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Logout failed: ${e.toString()}')),
+          );
+        }
+      }
+
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 500),
+            pageBuilder: (_, __, ___) => LoginScreen(),
+            transitionsBuilder: (_, animation, __, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, -1),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            },
+          ),
+        );
       }
     }
-  }
+
 
   Widget _buildLoadingList() {
     return ListView.builder(
